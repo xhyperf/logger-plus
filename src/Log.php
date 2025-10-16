@@ -128,7 +128,7 @@ class Log
      */
     public static function request(mixed $body, int $status = 200): void
     {
-        if (Context::get(__CLASS__ . '::' . __FUNCTION__)) {
+        if (Context::get(__METHOD__)) {
             return;
         }
 
@@ -176,7 +176,7 @@ class Log
 
         self::gather('request', $log);
 
-        Context::set(__CLASS__ . '::' . __FUNCTION__, true);
+        Context::set(__METHOD__, true);
     }
 
     /**
