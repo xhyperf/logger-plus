@@ -19,55 +19,60 @@ $fluentFormatter = [
     ],
 ];
 
-$lineFormatter = [
-    'class'       => LineFormatter::class,
-    'constructor' => [
-        'format'                => null,
-        'dateFormat'            => 'Y-m-d H:i:s',
-        'allowInlineLineBreaks' => true,
-    ],
-];
-
-$fileHandler = [
-    'class'       => StreamHandler::class,
-    'constructor' => [
-        'stream' => BASE_PATH . '/runtime/logs/hyperf.log',
-        'level'  => Level::Debug,
-    ],
-];
-
 $handlers = [];
 
 // 输出到文件
 if (Log::isOutputFile()) {
-    $handlers[] = [
-        ...$fileHandler,
-        'formatter' => Log::isOutputFluent() ? $fluentFormatter : $lineFormatter,
-    ];
+    $handlers[] = 'file';
 }
 
 // 输出到控制台
 if (Log::isOutputConsole()) {
-    $handlers[] = [
-        'class'       => StdoutHandler::class,
-        'constructor' => [
-            'level' => env('LOG_LEVEL', Level::Debug->value),
-        ],
-        'formatter'   => Log::isOutputFluent()
-            ? $fluentFormatter
-            : [
-                'class'       => StdoutFormatter::class,
-                'constructor' => [
-                    'allowInlineLineBreaks' => true,
-                ],
-            ],
-    ];
+    $handlers[] = 'console';
 }
 
 return [
-    'default' => [
-        'handlers'  => $handlers ?: [[]],
-        'handler'   => $fileHandler,
-        'formatter' => $lineFormatter,
+    'default'  => env('LOG_CHANNEL', 'stack'),
+    'channels' => [
+        'stack' => [
+            'handlers' => $handlers,
+        ],
+        // 输出到文件
+        'file'    => [
+            'handler'   => [
+                'class'       => StreamHandler::class,
+                'constructor' => [
+                    'stream' => BASE_PATH . '/runtime/logs/hyperf.log',
+                    'level'  => env('LOG_LEVEL', Level::Debug->value),
+                ],
+            ],
+            'formatter' => Log::isOutputFluent()
+                ? $fluentFormatter
+                : [
+                    'class'       => LineFormatter::class,
+                    'constructor' => [
+                        'format'                => null,
+                        'dateFormat'            => 'Y-m-d H:i:s',
+                        'allowInlineLineBreaks' => true,
+                    ],
+                ],
+        ],
+        // 输出到控制台
+        'console' => [
+            'handler'   => [
+                'class'       => StdoutHandler::class,
+                'constructor' => [
+                    'level' => env('LOG_LEVEL', Level::Debug->value),
+                ],
+            ],
+            'formatter' => Log::isOutputFluent()
+                ? $fluentFormatter
+                : [
+                    'class'       => StdoutFormatter::class,
+                    'constructor' => [
+                        'allowInlineLineBreaks' => true,
+                    ],
+                ],
+        ],
     ],
 ];

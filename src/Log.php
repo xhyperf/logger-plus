@@ -11,7 +11,6 @@ use Hyperf\HttpMessage\Server\RequestParserInterface;
 use Hyperf\HttpServer\Router\Dispatched;
 use Hyperf\Logger\LoggerFactory;
 use Hyperf\Stringable\Str;
-use JetBrains\PhpStorm\ArrayShape;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Swoole\Coroutine as SwooleCo;
@@ -21,14 +20,14 @@ use function Hyperf\Config\config;
 use function Hyperf\Support\env;
 
 /**
- * @method static emergency(string $message, array $context = [], string $channel = 'log', string $group = 'default')
- * @method static alert(string $message, array $context = [], string $channel = 'log', string $group = 'default')
- * @method static critical(string $message, array $context = [], string $channel = 'log', string $group = 'default')
- * @method static error(string $message, array $context = [], string $channel = 'log', string $group = 'default')
- * @method static warning(string $message, array $context = [], string $channel = 'log', string $group = 'default')
- * @method static notice(string $message, array $context = [], string $channel = 'log', string $group = 'default')
- * @method static info(string $message, array $context = [], string $channel = 'log', string $group = 'default')
- * @method static debug(string $message, array $context = [], string $channel = 'log', string $group = 'default')
+ * @method static emergency(string $message, array $context = [], string $name = 'log', ?string $group = null)
+ * @method static alert(string $message, array $context = [], string $name = 'log', ?string $group = null)
+ * @method static critical(string $message, array $context = [], string $name = 'log', ?string $group = null)
+ * @method static error(string $message, array $context = [], string $name = 'log', ?string $group = null)
+ * @method static warning(string $message, array $context = [], string $name = 'log', ?string $group = null)
+ * @method static notice(string $message, array $context = [], string $name = 'log', ?string $group = null)
+ * @method static info(string $message, array $context = [], string $name = 'log', ?string $group = null)
+ * @method static debug(string $message, array $context = [], string $name = 'log', ?string $group = null)
  * @see \Hyperf\Logger\Logger
  */
 class Log
@@ -63,33 +62,33 @@ class Log
 
     /**
      * 记录集合式的日志信息
-     * @param string $tag   集合名称
-     * @param mixed  $data  数据
-     * @param string $group 日志配置分组
+     * @param string  $tag     集合名称
+     * @param mixed   $data    数据
+     * @param ?string $channel 日志通道
      * @return void
      */
-    public static function gather(string $tag, mixed $data, string $group = 'default'): void
+    public static function gather(string $tag, mixed $data, ?string $channel = null): void
     {
-        static::log('notice', 'gather', compact('tag', 'data'), 'gather', $group);
+        static::log('notice', 'gather', compact('tag', 'data'), 'gather', $channel);
     }
 
     /**
      * trace 日志
-     * @param Throwable|null $e       异常
-     * @param string         $msg     消息内容
-     * @param string         $channel 通道
-     * @param string         $group   分组
+     * @param ?Throwable $e       异常
+     * @param string     $msg     消息内容
+     * @param string     $name    日志名称
+     * @param ?string    $channel 日志通道
      * @return void
      */
-    public static function trace(?Throwable $e = null, string $msg = '', string $channel = 'log', string $group = 'default'): void
+    public static function trace(?Throwable $e = null, string $msg = '', string $name = 'log', ?string $channel = null): void
     {
         if ($e instanceof Throwable) {
             $msg               = sprintf('%s [%s] in %s', $msg ?: $e->getMessage(), $e->getLine(), $e->getFile());
             $trace             = self::getTrace($e, true);
             $trace['previous'] = self::getTrace($e->getPrevious(), true);
-            self::log('error', $msg, $trace, $channel, $group);
+            self::log('error', $msg, $trace, $name, $channel);
         } else {
-            self::gather('trace', ['trace' => debug_backtrace()], $group);
+            self::gather('trace', ['trace' => debug_backtrace()], $channel);
         }
     }
 
@@ -203,20 +202,20 @@ class Log
 
     /**
      * 记录日志
-     * @param string $level   日志级别
-     * @param string $message 日志内容
-     * @param array  $context 上下文
-     * @param string $channel 日志通道
-     * @param string $group   分组
+     * @param string  $level   日志级别
+     * @param string  $message 日志内容
+     * @param array   $context 上下文
+     * @param string  $name    日志名称
+     * @param ?string $channel 日志通道
      * @return void
      * @throws
      */
-    public static function log(string $level, string $message, array $context = [], string $channel = 'log', string $group = 'default'): void
+    public static function log(string $level, string $message, array $context = [], string $name = 'log', ?string $channel = null): void
     {
-        $channel = strtoupper($channel);
+        $name = strtoupper($name);
 
         ApplicationContext::getContainer()->get(LoggerFactory::class)
-                          ->get($channel, $group)
+                          ->get($name, $channel)
                           ->$level(
                               $message,
                               $context
