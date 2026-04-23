@@ -97,9 +97,14 @@ class Log
      * 获取 trace 数据
      * @param Throwable|null $e
      * @param bool           $detail
-     * @return array
+     * @return array{
+     *      code: int,
+     *      message: string,
+     *      file: string,
+     *      line: int,
+     *      trace: array|string,
+     * }
      */
-    #[ArrayShape(['code' => "int", 'message' => "string", 'file' => "string", 'line' => "int", 'trace' => "array|string"])]
     public static function getTrace(?Throwable $e, bool $detail = false): array
     {
         if (! $e) {
