@@ -83,7 +83,8 @@ class Log
     public static function trace(?Throwable $e = null, string $msg = '', string $name = 'log', ?string $channel = null): void
     {
         if ($e instanceof Throwable) {
-            $msg               = sprintf('%s [%s] in %s', $msg ?: $e->getMessage(), $e->getLine(), $e->getFile());
+            $file              = str_replace(BASE_PATH . '/', '', $e->getFile());
+            $msg               = sprintf("%s --> %s#%s\n", $msg ?: $e->getMessage(), $file, $e->getLine());
             $trace             = self::getTrace($e, true);
             $trace['previous'] = self::getTrace($e->getPrevious(), true);
             self::log('error', $msg, $trace, $name, $channel);
