@@ -4,12 +4,9 @@ declare(strict_types=1);
 
 namespace XHyperf\LoggerPlus\Database;
 
-use Hyperf\Collection\Arr;
-use Hyperf\Context\Context;
 use Hyperf\Contract\ConfigInterface;
 use Hyperf\Database\Events\QueryExecuted;
 use Hyperf\Event\Contract\ListenerInterface;
-use Hyperf\Stringable\Str;
 use XHyperf\LoggerPlus\Log;
 
 class DbQueryLog implements ListenerInterface
@@ -36,18 +33,23 @@ class DbQueryLog implements ListenerInterface
         }
 
         $sql = $event->sql;
-        if (! Arr::isAssoc($event->bindings)) {
-            foreach ($event->bindings as $value) {
-                $sql = Str::replaceFirst(
-                    '?',
-                    sprintf("'%s'", is_string($value) ? str_replace('?', self::MASK, $value) : $value),
-                    $sql
-                );
+        if (array_is_list($event->bindings)) {
+            $sql = str_replace('%', self::MASK, $sql);
+            $sql = strtr($sql, '?', "'%s");
+            $sql = vsprintf($sql, $event->bindings);
+            $sql = str_replace(self::MASK, '%', $sql);
+        } else {
+            $bindings = [];
+
+            foreach ($event->bindings as $key => $value) {
+                $bindings[':' . $key] = "'$value'";
             }
+
+            $sql = strtr($sql, $bindings);
         }
 
         $data = [
-            'sql'        => str_replace(self::MASK, '?', $sql),
+            'sql'        => $sql,
             'query_time' => $event->time,
             ...$this->getIdx(),
         ];
@@ -58,6 +60,4 @@ class DbQueryLog implements ListenerInterface
 
         Log::gather('sql', $data);
     }
-
-
 }
