@@ -77,6 +77,9 @@ class GuzzleLogAspect extends AbstractAspect
             $body = str_replace("\r\n", ' %n% ', substr($body, 0, 256));
         } elseif ((str_contains($type, 'json')) || (str_starts_with($body, '{'))) {
             $body = json_decode($body, true) ?: $body;
+        } elseif (str_contains($type, 'x-www-form-urlencoded')) {
+            parse_str($body, $result);
+            $body = $result;
         }
 
         return $body;
