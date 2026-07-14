@@ -50,7 +50,7 @@ class DbQueryLog implements ListenerInterface
 
         $data = [
             'sql'        => $sql,
-            'query_time' => $event->time,
+            'query_time' => $event->time / 1000,
             ...$this->getIdx(),
         ];
 
