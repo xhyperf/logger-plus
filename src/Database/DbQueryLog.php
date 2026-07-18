@@ -35,7 +35,7 @@ class DbQueryLog implements ListenerInterface
         $sql = $event->sql;
         if (array_is_list($event->bindings)) {
             $sql = str_replace('%', self::MASK, $sql);
-            $sql = strtr($sql, '?', "'%s");
+            $sql = strtr($sql, ['?' => "'%s'"]);
             $sql = vsprintf($sql, $event->bindings);
             $sql = str_replace(self::MASK, '%', $sql);
         } else {
