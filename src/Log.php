@@ -57,7 +57,10 @@ class Log
      */
     public static function init(string $prefix = '', string $suffix = ''): void
     {
-        Context::set(self::REQUEST_ID_KEY, $prefix . ($suffix ? '.' . $suffix : bin2hex(openssl_random_pseudo_bytes(16))));
+        $prefix = $prefix ? $prefix . '.' : '';
+        $suffix = $suffix ?: bin2hex(openssl_random_pseudo_bytes(16));
+
+        Context::set(self::REQUEST_ID_KEY, $prefix . $suffix);
     }
 
     /**
